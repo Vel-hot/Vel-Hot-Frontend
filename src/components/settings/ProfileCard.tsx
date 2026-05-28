@@ -17,7 +17,6 @@ export function ProfileCard() {
         </button>
       </div>
       <h2 className="text-2xl font-bold text-zinc-800">Julien Durand</h2>
-      <p className="text-sm font-medium text-zinc-500">Analyste Principal</p>
 
       <div className="mt-8 flex items-center justify-between border-t border-zinc-100 pt-6 text-[10px] font-bold tracking-wider text-zinc-400">
         <span>ID: VH-9921</span>

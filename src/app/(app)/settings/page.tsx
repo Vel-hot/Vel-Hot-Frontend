@@ -21,10 +21,10 @@ export default function SettingsPage() {
   };
 
   return (
-    <div className="h-full overflow-y-auto bg-[#0a0a0a] p-12 text-zinc-400">
+    <div className="h-full overflow-y-auto bg-white p-12 text-zinc-600">
       <div className="mx-auto max-w-6xl">
         <header className="mb-12">
-          <h1 className="text-4xl font-bold text-white opacity-80">Paramètres du compte</h1>
+          <h1 className="text-4xl font-bold text-zinc-900">Paramètres du compte</h1>
           <p className="mt-2 text-zinc-500">Gérez vos préférences de prédiction et d&apos;interface.</p>
         </header>
 

@@ -64,7 +64,7 @@ export function Sidebar() {
 
       <nav className={`space-y-2 transition-all duration-300 ${collapsed ? "px-2 pt-4" : "px-4"}`}>
         <SidebarNavLink href="/" icon={Map} label="LIVE MAP" active={pathname === "/"} collapsed={collapsed} />
-        <SidebarNavLink href="/predictions" icon={TrendingUp} label="PREDICTIONS" active={pathname === "/predictions"} collapsed={collapsed} />
+        <SidebarNavLink href="/history" icon={TrendingUp} label="DATA HISTORIQUE" active={pathname === "/history"} collapsed={collapsed} />
         <SidebarNavLink href="/settings" icon={Settings} label="SETTINGS" active={pathname === "/settings"} collapsed={collapsed} />
       </nav>
 

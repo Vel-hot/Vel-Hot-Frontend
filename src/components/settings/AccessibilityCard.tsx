@@ -1,5 +1,6 @@
 "use client";
 
+import React from "react";
 import { Eye } from "lucide-react";
 import { Toggle } from "@/components/ui/Toggle";
 
@@ -10,7 +11,7 @@ interface AccessibilityCardProps {
 
 export function AccessibilityCard({ active, onToggle }: AccessibilityCardProps) {
   return (
-    <div className="rounded-3xl bg-[#dfe1e6] p-8 text-zinc-900 shadow-lg">
+    <div className="rounded-3xl bg-[#dfe1e6] p-8 text-zinc-900 shadow-lg border border-zinc-200">
       <div className="mb-6 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Eye size={18} className="text-[#A61D24]" />
@@ -19,7 +20,7 @@ export function AccessibilityCard({ active, onToggle }: AccessibilityCardProps) 
         <Toggle active={active} onToggle={onToggle} />
       </div>
 
-      <p className="text-xs leading-relaxed text-zinc-600">
+      <p className="text-xs leading-relaxed text-zinc-600 mb-6">
         Mode Daltonien : Optimisation des contrastes pour protanopes et deutéranopes.
       </p>
 
