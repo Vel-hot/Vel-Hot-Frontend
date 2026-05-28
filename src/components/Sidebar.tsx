@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 import type { LucideIcon } from "lucide-react";
 import {
   ChevronLeft,
@@ -14,6 +16,7 @@ import {
 
 export function Sidebar() {
   const [collapsed, setCollapsed] = useState(false);
+  const pathname = usePathname();
 
   return (
     <aside
@@ -60,9 +63,9 @@ export function Sidebar() {
       </div>
 
       <nav className={`space-y-2 transition-all duration-300 ${collapsed ? "px-2 pt-4" : "px-4"}`}>
-        <SidebarNavButton icon={Map} label="LIVE MAP" active collapsed={collapsed} />
-        <SidebarNavButton icon={TrendingUp} label="PREDICTIONS" collapsed={collapsed} />
-        <SidebarNavButton icon={Settings} label="SETTINGS" collapsed={collapsed} />
+        <SidebarNavLink href="/" icon={Map} label="LIVE MAP" active={pathname === "/"} collapsed={collapsed} />
+        <SidebarNavLink href="/predictions" icon={TrendingUp} label="PREDICTIONS" active={pathname === "/predictions"} collapsed={collapsed} />
+        <SidebarNavLink href="/settings" icon={Settings} label="SETTINGS" active={pathname === "/settings"} collapsed={collapsed} />
       </nav>
 
       <div
@@ -77,14 +80,15 @@ export function Sidebar() {
   );
 }
 
-type SidebarNavButtonProps = {
+type SidebarNavLinkProps = {
+  href: string;
   icon: LucideIcon;
   label: string;
   active?: boolean;
   collapsed: boolean;
 };
 
-function SidebarNavButton({ icon: Icon, label, active, collapsed }: SidebarNavButtonProps) {
+function SidebarNavLink({ href, icon: Icon, label, active, collapsed }: SidebarNavLinkProps) {
   const base =
     "flex w-full items-center rounded-xl px-4 py-3 text-sm font-semibold transition";
   const activeStyles = "border-l-[3px] border-[#A61D24] bg-white text-[#A61D24]";
@@ -92,7 +96,8 @@ function SidebarNavButton({ icon: Icon, label, active, collapsed }: SidebarNavBu
   const collapsedStyles = "justify-center px-0";
 
   return (
-    <button
+    <Link
+      href={href}
       aria-label={label}
       className={`${base} ${active ? activeStyles : inactiveStyles} ${
         collapsed ? collapsedStyles : "gap-3"
@@ -100,15 +105,9 @@ function SidebarNavButton({ icon: Icon, label, active, collapsed }: SidebarNavBu
     >
       <Icon size={16} />
       <span className={collapsed ? "sr-only" : "whitespace-nowrap"}>{label}</span>
-    </button>
+    </Link>
   );
 }
-
-type SidebarFooterButtonProps = {
-  icon: LucideIcon;
-  label: string;
-  collapsed: boolean;
-};
 
 function SidebarFooterButton({ icon: Icon, label, collapsed }: SidebarFooterButtonProps) {
   return (
@@ -123,3 +122,9 @@ function SidebarFooterButton({ icon: Icon, label, collapsed }: SidebarFooterButt
     </button>
   );
 }
+
+type SidebarFooterButtonProps = {
+  icon: LucideIcon;
+  label: string;
+  collapsed: boolean;
+};
