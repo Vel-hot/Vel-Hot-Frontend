@@ -1,7 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { Layers, LocateFixed, ZoomIn, ZoomOut } from "lucide-react";
+import { Info, Layers, LocateFixed, ZoomIn, ZoomOut } from "lucide-react";
 
 type MapControlsProps = {
   onZoomIn: () => void;
@@ -9,6 +9,8 @@ type MapControlsProps = {
   onLocate: () => void;
   onToggleLayer: () => void;
   heatLayerVisible: boolean;
+  onToggleInfo: () => void;
+  infoActive: boolean;
 };
 
 export function MapControls({
@@ -17,9 +19,11 @@ export function MapControls({
   onLocate,
   onToggleLayer,
   heatLayerVisible,
+  onToggleInfo,
+  infoActive,
 }: MapControlsProps) {
   return (
-    <div className="absolute right-6 top-20 z-20 flex flex-col gap-3">
+    <div className="absolute right-8 top-24 z-20 flex flex-col gap-3">
       <MapControlButton ariaLabel="Zoom avant" onClick={onZoomIn}>
         <ZoomIn size={16} />
       </MapControlButton>
@@ -31,6 +35,9 @@ export function MapControls({
       </MapControlButton>
       <MapControlButton ariaLabel="Couches" onClick={onToggleLayer} isActive={heatLayerVisible}>
         <Layers size={16} />
+      </MapControlButton>
+      <MapControlButton ariaLabel="Légende" onClick={onToggleInfo} isActive={infoActive}>
+        <Info size={16} />
       </MapControlButton>
     </div>
   );
@@ -51,7 +58,7 @@ function MapControlButton({ children, ariaLabel, onClick, isActive }: MapControl
       className={`grid h-11 w-11 place-items-center rounded-xl border text-zinc-700 shadow-sm transition ${
         isActive
           ? "border-[#A61D24] bg-white text-[#A61D24]"
-          : "border-zinc-200 bg-white"
+          : "border-zinc-200 bg-white hover:bg-zinc-50"
       }`}
     >
       {children}

@@ -54,7 +54,7 @@ export function BottomTimeBar({
             className="h-1.5 w-full cursor-pointer appearance-none rounded-full bg-zinc-200 accent-[#A61D24]"
           />
           <div
-            className="absolute -top-3 -translate-x-1/2 rounded-full bg-[#A61D24] px-2 py-0.5 text-[10px] font-bold text-white"
+            className="absolute -top-3 -translate-x-1/2 whitespace-nowrap rounded-full bg-[#A61D24] px-2 py-0.5 text-[10px] font-bold text-white"
             style={{ left: `${(minuteOfDay / 1439) * 100}%` }}
           >
             EN DIRECT : {liveTimeLabel}

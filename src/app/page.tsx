@@ -4,7 +4,6 @@ import dynamic from "next/dynamic";
 import { useEffect, useRef, useState } from "react";
 import type { Map as LeafletMap } from "leaflet";
 import { BottomTimeBar } from "@/components/BottomTimeBar";
-import { HeaderBar } from "@/components/HeaderBar";
 import { InfoCard } from "@/components/InfoCard";
 import { MapControls } from "@/components/MapControls";
 import { Sidebar } from "@/components/Sidebar";
@@ -33,6 +32,7 @@ export default function Home() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [playbackSpeed, setPlaybackSpeed] = useState(1.5);
   const [showHeatLayer, setShowHeatLayer] = useState(true);
+  const [showInfoCard, setShowInfoCard] = useState(false);
   const [userPosition, setUserPosition] = useState<[number, number] | null>(null);
 
   const timeBarBottom = 24;
@@ -138,22 +138,24 @@ export default function Home() {
 
           <div className="pointer-events-none absolute inset-0 z-[1] bg-[radial-gradient(circle_at_18%_24%,rgba(255,255,255,0.45),transparent_45%),radial-gradient(circle_at_74%_70%,rgba(255,255,255,0.3),transparent_40%)]" />
 
-          <HeaderBar />
-
           <MapControls
             onZoomIn={() => mapRef.current?.zoomIn()}
             onZoomOut={() => mapRef.current?.zoomOut()}
             onLocate={handleLocate}
             onToggleLayer={() => setShowHeatLayer((visible) => !visible)}
             heatLayerVisible={showHeatLayer}
+            onToggleInfo={() => setShowInfoCard((visible) => !visible)}
+            infoActive={showInfoCard}
           />
 
-          <InfoCard
-            dataSourceLabel={dataSourceLabel}
-            lastSync={lastSync}
-            stationCount={stationStates.length}
-            bottomOffsetPx={infoCardBottomOffset}
-          />
+          {showInfoCard && (
+            <InfoCard
+              dataSourceLabel={dataSourceLabel}
+              lastSync={lastSync}
+              stationCount={stationStates.length}
+              bottomOffsetPx={infoCardBottomOffset}
+            />
+          )}
 
           <BottomTimeBar
             minuteOfDay={minuteOfDay}
