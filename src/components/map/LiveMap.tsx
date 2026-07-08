@@ -91,9 +91,12 @@ export function LiveMap() {
         zoomControl={false}
         attributionControl={false}
         className="absolute inset-0 z-0"
-        whenReady={(event: { target: LeafletMap }) => {
-          mapRef.current = event.target;
-        }}
+        whenReady={(() => {
+          const handler = (event: { target: LeafletMap }) => {
+            mapRef.current = event.target;
+          };
+          return handler as () => void;
+        })()}
       >
         <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
         {showHeatLayer &&

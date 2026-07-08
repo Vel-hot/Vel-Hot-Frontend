@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { usePathname } from "next/navigation";
 import type { LucideIcon } from "lucide-react";
 import {
@@ -15,14 +16,23 @@ import {
   Activity,
 } from "lucide-react";
 
+import { useAuth } from "@/components/auth/AuthProvider";
+
 export function Sidebar() {
   const [collapsed, setCollapsed] = useState(false);
   const pathname = usePathname();
+  const router = useRouter();
+  const { user, isAuthenticated, signOut } = useAuth();
+
+  const handleLogout = () => {
+    signOut();
+    router.push("/login");
+  };
 
   return (
     <aside
       className={`flex shrink-0 flex-col bg-[#f5f6f8] transition-all duration-300 ${
-        collapsed ? "w-[80px]" : "w-[280px]"
+        collapsed ? "w-20" : "w-70"
       }`}
     >
       <div
@@ -75,8 +85,42 @@ export function Sidebar() {
           collapsed ? "flex flex-col items-center px-2" : "px-8"
         }`}
       >
+        {isAuthenticated && user ? (
+          <div className={collapsed ? "flex flex-col items-center gap-3" : "space-y-3"}>
+            <div className={`rounded-2xl border border-zinc-200 bg-white px-4 py-3 ${collapsed ? "text-center" : ""}`}>
+              <p className="text-[10px] font-bold tracking-[0.16em] text-[#A61D24]">CONNECTÉ</p>
+              <p className={`mt-1 text-sm font-semibold text-zinc-800 ${collapsed ? "sr-only" : ""}`}>
+                {user.prenom} {user.nom}
+              </p>
+              <p className={`text-[11px] text-zinc-500 ${collapsed ? "sr-only" : ""}`}>{user.email}</p>
+            </div>
+            <SidebarFooterButton icon={LogOut} label="LOGOUT" collapsed={collapsed} onClick={handleLogout} />
+          </div>
+        ) : (
+          <div className={collapsed ? "flex flex-col items-center gap-2" : "space-y-2"}>
+            <Link
+              href="/login"
+              className={`flex items-center rounded-xl border border-zinc-200 bg-white px-4 py-3 text-zinc-700 transition hover:bg-zinc-50 ${
+                collapsed ? "justify-center px-0" : "gap-2"
+              }`}
+              aria-label="Connexion"
+            >
+              <LogOut size={14} />
+              <span className={collapsed ? "sr-only" : ""}>Connexion</span>
+            </Link>
+            <Link
+              href="/register"
+              className={`flex items-center rounded-xl bg-[#A61D24] px-4 py-3 text-white transition hover:opacity-95 ${
+                collapsed ? "justify-center px-0" : "gap-2"
+              }`}
+              aria-label="Inscription"
+            >
+              <span className={collapsed ? "sr-only" : ""}>Inscription</span>
+            </Link>
+          </div>
+        )}
+
         <SidebarFooterButton icon={CircleHelp} label="HELP" collapsed={collapsed} />
-        <SidebarFooterButton icon={LogOut} label="LOGOUT" collapsed={collapsed} />
       </div>
     </aside>
   );
@@ -111,10 +155,11 @@ function SidebarNavLink({ href, icon: Icon, label, active, collapsed }: SidebarN
   );
 }
 
-function SidebarFooterButton({ icon: Icon, label, collapsed }: SidebarFooterButtonProps) {
+function SidebarFooterButton({ icon: Icon, label, collapsed, onClick }: SidebarFooterButtonProps) {
   return (
     <button
       aria-label={label}
+      onClick={onClick}
       className={`flex items-center gap-2 transition hover:text-zinc-700 ${
         collapsed ? "justify-center" : ""
       }`}
@@ -129,4 +174,5 @@ type SidebarFooterButtonProps = {
   icon: LucideIcon;
   label: string;
   collapsed: boolean;
+  onClick?: () => void;
 };

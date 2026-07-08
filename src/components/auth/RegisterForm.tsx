@@ -1,41 +1,84 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+
+import { useAuth } from "@/components/auth/AuthProvider";
 
 export default function RegisterForm() {
-  const [name, setName] = useState("");
+  const router = useRouter();
+  const { signUp, isAuthenticated, isLoading } = useAuth();
+  const [nom, setNom] = useState("");
+  const [prenom, setPrenom] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  useEffect(() => {
+    if (!isLoading && isAuthenticated) {
+      router.replace("/");
+    }
+  }, [isAuthenticated, isLoading, router]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError(null);
+
     if (password !== confirmPassword) {
-      alert("Les mots de passe ne correspondent pas");
+      setError("Les mots de passe ne correspondent pas");
       return;
     }
-    console.log("Registration attempt with:", { name, email, password });
-    // API call will be implemented later
+
+    setIsSubmitting(true);
+
+    try {
+      await signUp({ nom, prenom, email, password });
+      router.replace("/");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Impossible de créer le compte");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
+      {error && (
+        <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          {error}
+        </div>
+      )}
+
       <div>
-        <label
-          htmlFor="name"
-          className="block text-sm font-medium text-gray-700 mb-1"
-        >
-          Nom complet
+        <label htmlFor="prenom" className="block text-sm font-medium text-gray-700 mb-1">
+          Prénom
         </label>
         <input
-          id="name"
+          id="prenom"
           type="text"
           required
-          value={name}
-          onChange={(e) => setName(e.target.value)}
+          value={prenom}
+          onChange={(e) => setPrenom(e.target.value)}
           className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-red-500 focus:border-red-500"
-          placeholder="Jean Dupont"
+          placeholder="Jean"
+        />
+      </div>
+
+      <div>
+        <label htmlFor="nom" className="block text-sm font-medium text-gray-700 mb-1">
+          Nom
+        </label>
+        <input
+          id="nom"
+          type="text"
+          required
+          value={nom}
+          onChange={(e) => setNom(e.target.value)}
+          className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-red-500 focus:border-red-500"
+          placeholder="Dupont"
         />
       </div>
 
@@ -120,9 +163,10 @@ export default function RegisterForm() {
 
       <button
         type="submit"
+        disabled={isSubmitting}
         className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors mt-6"
       >
-        Créer un compte
+        {isSubmitting ? "Création..." : "Créer un compte"}
       </button>
 
       <div className="text-center mt-4">
