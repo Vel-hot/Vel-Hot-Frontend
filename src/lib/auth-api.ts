@@ -1,6 +1,6 @@
 import type { AuthTokenResponse, AuthUser, LoginPayload, RegisterPayload } from "@/types/auth";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_VELOV_API_BASE_URL ?? "http://localhost:8000";
+const API_BASE_URL = (process.env.NEXT_PUBLIC_VELOV_API_BASE_URL ?? "http://localhost:8000") + "/api";
 
 type ErrorPayload = {
   detail?: string;
