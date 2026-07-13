@@ -1,7 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { Map as LeafletMap } from "leaflet";
 import { BottomTimeBar } from "@/components/BottomTimeBar";
 import { InfoCard } from "@/components/InfoCard";
@@ -33,13 +33,64 @@ export function LiveMap() {
   const [showHeatLayer, setShowHeatLayer] = useState(true);
   const [showInfoCard, setShowInfoCard] = useState(false);
   const [userPosition, setUserPosition] = useState<[number, number] | null>(null);
+  const [zoom, setZoom] = useState(13);
 
   const timeBarBottom = 24;
   const timeBarHeight = 96;
   const timeBarGap = 16;
   const infoCardBottomOffset = timeBarBottom + timeBarHeight + timeBarGap;
 
-  const { stationStates, apiStatus, lastSync } = useStationsData(minuteOfDay);
+  const { stationStates, apiStatus, lastSync, apiTimestamp } = useStationsData(minuteOfDay);
+
+  // Synchroniser le slider temporel avec l'heure de l'API
+  useEffect(() => {
+    if (apiTimestamp) {
+      const date = new Date(apiTimestamp);
+      const hour = date.getHours();
+      const minute = date.getMinutes();
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setMinuteOfDay(hour * 60 + minute);
+    }
+  }, [apiTimestamp]);
+
+  const [mapInstance, setMapInstance] = useState<LeafletMap | null>(null);
+
+  useEffect(() => {
+    if (!mapInstance) return;
+
+    const handleZoom = () => {
+      setZoom(mapInstance.getZoom());
+    };
+
+    mapInstance.on("zoomend", handleZoom);
+
+    return () => {
+      mapInstance.off("zoomend", handleZoom);
+    };
+  }, [mapInstance]);
+
+  const filteredStations = useMemo(() => {
+    if (!stationStates) return [];
+    
+    // Trier les stations par capacité décroissante (les plus grosses stations en premier)
+    const sorted = [...stationStates].sort((a, b) => b.capacity - a.capacity);
+
+    if (zoom <= 11) {
+      // Très dézoomé : affiche seulement les 25 plus gros hubs
+      return sorted.slice(0, 25);
+    } else if (zoom === 12) {
+      // Dézoomé : affiche les 60 plus grosses stations
+      return sorted.slice(0, 60);
+    } else if (zoom === 13) {
+      // Vue par défaut : affiche les 100 plus grosses stations
+      return sorted.slice(0, 100);
+    } else if (zoom === 14) {
+      // Zoom intermédiaire : affiche les 220 plus grosses stations
+      return sorted.slice(0, 220);
+    }
+    // Zoom rapproché (>= 15) : affiche toutes les stations
+    return stationStates;
+  }, [stationStates, zoom]);
 
   useEffect(() => {
     if (!isPlaying) {
@@ -94,13 +145,14 @@ export function LiveMap() {
         whenReady={(() => {
           const handler = (event: { target: LeafletMap }) => {
             mapRef.current = event.target;
+            setMapInstance(event.target);
           };
           return handler as () => void;
         })()}
       >
         <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
         {showHeatLayer &&
-          stationStates.map((station) => (
+          filteredStations.map((station) => (
             <CircleMarker
               key={station.id}
               center={[station.lat, station.lng]}
@@ -163,19 +215,20 @@ export function LiveMap() {
         onTogglePlay={() => setIsPlaying((value) => !value)}
         onMinuteChange={(value) => setMinuteOfDay(value)}
         onToggleSpeed={() => setPlaybackSpeed((prev) => (prev === 1.5 ? 3 : 1.5))}
+        analysisDate={apiTimestamp ?? undefined}
       />
     </>
   );
 }
 
 function stationColor(availabilityPct: number) {
-  if (availabilityPct < 35) {
-    return "#2ea44f";
+  if (availabilityPct < 20) {
+    return "#ef4444"; // Rouge (vide ou presque vide : alerte)
   }
-  if (availabilityPct < 70) {
-    return "#f59e0b";
+  if (availabilityPct < 50) {
+    return "#f59e0b"; // Orange (moyen)
   }
-  return "#ef4444";
+  return "#2ea44f"; // Vert (plein ou bien rempli : bonne disponibilité)
 }
 
 function formatMinute(minute: number) {

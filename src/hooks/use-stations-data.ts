@@ -2,19 +2,27 @@ import { useEffect, useMemo, useState } from "react";
 import { fetchStationsFromApi } from "@/lib/stations-api";
 import { buildSimulatedStations } from "@/lib/station-simulation";
 import type { ApiStatus, RealtimeStation, StationState } from "@/types/stations";
+import { useAuth } from "@/components/auth/AuthProvider";
 
 export function useStationsData(minuteOfDay: number) {
   const [apiStations, setApiStations] = useState<StationState[] | null>(null);
   const [apiStatus, setApiStatus] = useState<ApiStatus>("idle");
   const [lastSync, setLastSync] = useState<Date | null>(null);
+  const { token, isAuthenticated } = useAuth();
 
   useEffect(() => {
+    if (!isAuthenticated || !token) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setApiStatus("idle");
+      return;
+    }
+
     let cancelled = false;
     const abortController = new AbortController();
 
     const loadStations = async () => {
       try {
-        const realtimeStations = await fetchStationsFromApi(abortController.signal);
+        const realtimeStations = await fetchStationsFromApi(token, abortController.signal);
 
         if (cancelled) {
           return;
@@ -44,15 +52,21 @@ export function useStationsData(minuteOfDay: number) {
       abortController.abort();
       window.clearInterval(refresh);
     };
-  }, []);
+  }, [token, isAuthenticated]);
 
   const simulatedStations = useMemo(() => buildSimulatedStations(minuteOfDay), [minuteOfDay]);
   const stationStates = apiStations ?? simulatedStations;
+
+  const apiTimestamp = useMemo(() => {
+    if (!apiStations || apiStations.length === 0) return null;
+    return apiStations[0].timestamp ?? null;
+  }, [apiStations]);
 
   return {
     stationStates,
     apiStatus,
     lastSync,
+    apiTimestamp,
   };
 }
 
@@ -70,6 +84,7 @@ function toStationState(station: RealtimeStation): StationState {
     bikes,
     docks,
     bikesPct,
+    timestamp: station.timestamp,
   };
 }
 

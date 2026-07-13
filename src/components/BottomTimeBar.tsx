@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo } from "react";
 import { CalendarDays, Pause, Play } from "lucide-react";
 
 type BottomTimeBarProps = {
@@ -10,6 +11,7 @@ type BottomTimeBarProps = {
   onTogglePlay: () => void;
   onMinuteChange: (value: number) => void;
   onToggleSpeed: () => void;
+  analysisDate?: string;
 };
 
 export function BottomTimeBar({
@@ -20,7 +22,22 @@ export function BottomTimeBar({
   onTogglePlay,
   onMinuteChange,
   onToggleSpeed,
+  analysisDate,
 }: BottomTimeBarProps) {
+  const formattedDate = useMemo(() => {
+    if (!analysisDate) return "Chargement...";
+    try {
+      const date = new Date(analysisDate);
+      return date.toLocaleDateString("fr-FR", {
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+      });
+    } catch {
+      return analysisDate;
+    }
+  }, [analysisDate]);
+
   return (
     <footer className="absolute bottom-6 left-1/2 z-20 h-[96px] w-[760px] -translate-x-1/2 rounded-2xl border border-zinc-200 bg-white px-5 py-4 shadow-[0_18px_35px_-25px_rgba(0,0,0,0.65)]">
       <div className="flex items-center gap-4">
@@ -28,7 +45,7 @@ export function BottomTimeBar({
           <CalendarDays size={18} className="text-[#A61D24]" />
           <span>
             <span className="block text-[9px] font-bold uppercase tracking-[0.15em] text-zinc-500">Date analyse</span>
-            <span className="block text-sm font-bold text-zinc-700">24 Oct. 2023</span>
+            <span className="block text-sm font-bold text-zinc-700">{formattedDate}</span>
           </span>
         </button>
 

@@ -2,22 +2,19 @@ import type { RealtimeStation } from "@/types/stations";
 
 type UnknownRecord = Record<string, unknown>;
 
-const API_URL = process.env.NEXT_PUBLIC_VELOV_API_URL;
+const BASE_URL = process.env.NEXT_PUBLIC_VELOV_API_BASE_URL ?? "http://localhost:8000";
 
 export async function fetchStationsFromApi(
+  token: string,
   signal?: AbortSignal
 ): Promise<RealtimeStation[] | null> {
-  // If no endpoint is configured yet, caller can fallback to local simulation.
-  if (!API_URL) {
-    return null;
-  }
-
-  const response = await fetch(API_URL, {
+  const response = await fetch(`${BASE_URL}/stations`, {
     method: "GET",
     signal,
     cache: "no-store",
     headers: {
       Accept: "application/json",
+      Authorization: `Bearer ${token}`,
     },
   });
 
@@ -81,6 +78,8 @@ function normalizeStation(raw: unknown): RealtimeStation | null {
     return null;
   }
 
+  const timestamp = toStringValue(raw.timestamp);
+
   return {
     id,
     name,
@@ -89,6 +88,7 @@ function normalizeStation(raw: unknown): RealtimeStation | null {
     capacity,
     bikes: clampInteger(bikes, 0, capacity),
     docks: clampInteger(docks, 0, capacity),
+    timestamp,
   };
 }
 

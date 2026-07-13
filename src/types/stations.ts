@@ -6,6 +6,7 @@ export type RealtimeStation = {
   capacity: number;
   bikes: number;
   docks: number;
+  timestamp?: string;
 };
 
 export type StationState = {
@@ -17,6 +18,7 @@ export type StationState = {
   bikes: number;
   docks: number;
   bikesPct: number;
+  timestamp?: string;
 };
 
 export type ApiStatus = "idle" | "ok" | "error" | "disabled";
