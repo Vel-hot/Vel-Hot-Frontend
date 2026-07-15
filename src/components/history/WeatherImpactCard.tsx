@@ -15,7 +15,19 @@ export function WeatherImpactCard() {
   ];
 
   return (
-    <div className="rounded-3xl bg-white p-8 shadow-xl">
+    <div className="rounded-3xl bg-white p-8 shadow-xl relative overflow-hidden">
+      {/* Overlay Bientôt disponible */}
+      <div className="absolute inset-0 bg-white/40 backdrop-blur-md flex flex-col items-center justify-center z-10 transition-all duration-300">
+        <div className="text-center p-6 bg-white/90 border border-zinc-200/80 rounded-2xl shadow-xl max-w-[240px]">
+          <p className="text-xs font-black tracking-widest text-[#A61D24] uppercase mb-1">
+            Bientôt disponible
+          </p>
+          <p className="text-[9px] text-zinc-500 font-bold uppercase tracking-wider leading-relaxed">
+            Intégration de l'impact météo sur l'usage en cours de développement
+          </p>
+        </div>
+      </div>
+
       <div className="flex items-center justify-between mb-2">
         <h3 className="text-[10px] font-black uppercase tracking-widest text-zinc-400">
           IMPACT MÉTÉO VS USAGE
