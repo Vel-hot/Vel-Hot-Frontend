@@ -7,6 +7,7 @@ import { BottomTimeBar } from "@/components/BottomTimeBar";
 import { InfoCard } from "@/components/InfoCard";
 import { MapControls } from "@/components/MapControls";
 import { useStationsData } from "@/hooks/use-stations-data";
+import { usePredictions } from "@/hooks/use-predictions";
 
 const MapContainer = dynamic(
   () => import("react-leaflet").then((module) => module.MapContainer),
@@ -41,6 +42,7 @@ export function LiveMap() {
   const infoCardBottomOffset = timeBarBottom + timeBarHeight + timeBarGap;
 
   const { stationStates, apiStatus, lastSync, apiTimestamp } = useStationsData(minuteOfDay);
+  const { byStation: predictionsByStation } = usePredictions();
 
   // Synchroniser le slider temporel avec l'heure de l'API
   useEffect(() => {
@@ -170,6 +172,24 @@ export function LiveMap() {
                   <p>
                     {station.bikes} vélos / {station.capacity}
                   </p>
+                  {(() => {
+                    const prediction = predictionsByStation.get(station.id);
+                    if (!prediction) {
+                      return null;
+                    }
+                    return (
+                      <div className="mt-1 border-t border-black/10 pt-1">
+                        <p className="font-semibold text-[10px] uppercase tracking-wide text-neutral-500">
+                          Prévision vélos
+                        </p>
+                        <p>
+                          +15 min : <strong>{prediction.bikes.t15}</strong> ·{" "}
+                          +30 min : <strong>{prediction.bikes.t30}</strong> ·{" "}
+                          +1 h : <strong>{prediction.bikes.t60}</strong>
+                        </p>
+                      </div>
+                    );
+                  })()}
                 </div>
               </Tooltip>
             </CircleMarker>
