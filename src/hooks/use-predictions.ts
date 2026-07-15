@@ -1,38 +1,36 @@
-import { useEffect, useState } from "react";
-import type { PredictionApiResponse } from "@/types/predictions";
-
-const PREDICTIONS_URL = process.env.NEXT_PUBLIC_PREDICTIONS_API_URL;
+import { useEffect, useMemo, useState } from "react";
+import { fetchPredictionsFromApi } from "@/lib/predictions-api";
+import type { ApiStatus } from "@/types/stations";
+import type { PredictionApiResponse, PredictionMap } from "@/types/predictions";
+import { useAuth } from "@/components/auth/AuthProvider";
 
 export function usePredictions() {
   const [data, setData] = useState<PredictionApiResponse | null>(null);
-  const [status, setStatus] = useState<"idle" | "ok" | "error" | "disabled">(
-    PREDICTIONS_URL ? "idle" : "disabled"
-  );
+  const [status, setStatus] = useState<ApiStatus>("idle");
+  const { token, isAuthenticated } = useAuth();
 
   useEffect(() => {
-    if (!PREDICTIONS_URL) {
+    if (!isAuthenticated || !token) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setStatus("idle");
       return;
     }
 
     let cancelled = false;
     const abortController = new AbortController();
 
-    const fetchPredictions = async () => {
+    const loadPredictions = async () => {
       try {
-        const response = await fetch(PREDICTIONS_URL, {
-          signal: abortController.signal,
-          cache: "no-store",
-        });
-
-        if (!response.ok) {
-          throw new Error(`Prediction API error: ${response.status}`);
+        const payload = await fetchPredictionsFromApi(token, abortController.signal);
+        if (cancelled) {
+          return;
         }
-
-        const payload = (await response.json()) as PredictionApiResponse;
-        if (!cancelled) {
-          setData(payload);
-          setStatus("ok");
+        if (payload === null) {
+          setStatus("disabled");
+          return;
         }
+        setData(payload);
+        setStatus("ok");
       } catch {
         if (!cancelled) {
           setStatus("error");
@@ -40,15 +38,25 @@ export function usePredictions() {
       }
     };
 
-    fetchPredictions();
-    const interval = window.setInterval(fetchPredictions, 60_000);
+    loadPredictions();
+    // Les prédictions gold sont recalculées toutes les 15 min ; on rafraîchit
+    // à la même cadence que les stations (60 s) pour rester simple.
+    const refresh = window.setInterval(loadPredictions, 60_000);
 
     return () => {
       cancelled = true;
       abortController.abort();
-      window.clearInterval(interval);
+      window.clearInterval(refresh);
     };
-  }, []);
+  }, [token, isAuthenticated]);
 
-  return { data, status };
+  const byStation: PredictionMap = useMemo(() => {
+    const map: PredictionMap = new Map();
+    for (const prediction of data?.predictions ?? []) {
+      map.set(prediction.stationId, prediction);
+    }
+    return map;
+  }, [data]);
+
+  return { data, byStation, status };
 }
