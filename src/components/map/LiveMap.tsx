@@ -28,7 +28,12 @@ const LYON_CENTER: [number, number] = [45.764, 4.8357];
 
 export function LiveMap() {
   const mapRef = useRef<LeafletMap | null>(null);
-  const [minuteOfDay, setMinuteOfDay] = useState(17 * 60 + 34);
+  // Slider initialisé sur l'heure courante locale ; l'utilisateur peut ensuite
+  // remonter dans la journée (le backend renvoie l'état réel à cet instant).
+  const [minuteOfDay, setMinuteOfDay] = useState(() => {
+    const now = new Date();
+    return now.getHours() * 60 + now.getMinutes();
+  });
   const [isPlaying, setIsPlaying] = useState(false);
   const [playbackSpeed, setPlaybackSpeed] = useState(1.5);
   const [showHeatLayer, setShowHeatLayer] = useState(true);
@@ -43,17 +48,6 @@ export function LiveMap() {
 
   const { stationStates, apiStatus, lastSync, apiTimestamp } = useStationsData(minuteOfDay);
   const { byStation: predictionsByStation } = usePredictions();
-
-  // Synchroniser le slider temporel avec l'heure de l'API
-  useEffect(() => {
-    if (apiTimestamp) {
-      const date = new Date(apiTimestamp);
-      const hour = date.getHours();
-      const minute = date.getMinutes();
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setMinuteOfDay(hour * 60 + minute);
-    }
-  }, [apiTimestamp]);
 
   const [mapInstance, setMapInstance] = useState<LeafletMap | null>(null);
 
@@ -108,6 +102,8 @@ export function LiveMap() {
   }, [isPlaying, playbackSpeed]);
 
   const liveTimeLabel = formatMinute(minuteOfDay);
+  const nowMinuteOfDay = new Date().getHours() * 60 + new Date().getMinutes();
+  const isLive = Math.abs(minuteOfDay - nowMinuteOfDay) <= 5;
 
   const dataSourceLabel =
     apiStatus === "ok"
@@ -230,6 +226,7 @@ export function LiveMap() {
       <BottomTimeBar
         minuteOfDay={minuteOfDay}
         liveTimeLabel={liveTimeLabel}
+        isLive={isLive}
         isPlaying={isPlaying}
         playbackSpeed={playbackSpeed}
         onTogglePlay={() => setIsPlaying((value) => !value)}

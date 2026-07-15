@@ -1,14 +1,28 @@
 import { useEffect, useMemo, useState } from "react";
-import { fetchStationsFromApi } from "@/lib/stations-api";
+import { fetchStationsSnapshotFromApi } from "@/lib/stations-api";
 import { buildSimulatedStations } from "@/lib/station-simulation";
 import type { ApiStatus, RealtimeStation, StationState } from "@/types/stations";
 import { useAuth } from "@/components/auth/AuthProvider";
+
+/**
+ * Convertit une minute-du-jour (0..1439, heure locale du navigateur) en
+ * instant absolu ISO 8601 pour aujourd'hui. Le backend compare cet instant
+ * aux timestamps UTC du silver.
+ */
+function minuteToTodayIso(minuteOfDay: number): string {
+  const d = new Date();
+  d.setHours(0, 0, 0, 0);
+  d.setMinutes(minuteOfDay);
+  return d.toISOString();
+}
 
 export function useStationsData(minuteOfDay: number) {
   const [apiStations, setApiStations] = useState<StationState[] | null>(null);
   const [apiStatus, setApiStatus] = useState<ApiStatus>("idle");
   const [lastSync, setLastSync] = useState<Date | null>(null);
   const { token, isAuthenticated } = useAuth();
+
+  const atIso = useMemo(() => minuteToTodayIso(minuteOfDay), [minuteOfDay]);
 
   useEffect(() => {
     if (!isAuthenticated || !token) {
@@ -22,7 +36,11 @@ export function useStationsData(minuteOfDay: number) {
 
     const loadStations = async () => {
       try {
-        const realtimeStations = await fetchStationsFromApi(token, abortController.signal);
+        const realtimeStations = await fetchStationsSnapshotFromApi(
+          token,
+          atIso,
+          abortController.signal
+        );
 
         if (cancelled) {
           return;
@@ -44,17 +62,22 @@ export function useStationsData(minuteOfDay: number) {
       }
     };
 
-    loadStations();
+    // Léger debounce : lisse le scrubbing et le playback (5 min / tick).
+    const debounce = window.setTimeout(loadStations, 200);
+    // Rafraîchissement live pour capter les nouveaux relevés (~5 min).
     const refresh = window.setInterval(loadStations, 60_000);
 
     return () => {
       cancelled = true;
       abortController.abort();
+      window.clearTimeout(debounce);
       window.clearInterval(refresh);
     };
-  }, [token, isAuthenticated]);
+  }, [token, isAuthenticated, atIso]);
 
   const simulatedStations = useMemo(() => buildSimulatedStations(minuteOfDay), [minuteOfDay]);
+  // Non authentifié : simulation. Authentifié : données réelles (même si le
+  // snapshot est vide pour l'instant sélectionné — on n'invente rien).
   const stationStates = apiStations ?? simulatedStations;
 
   const apiTimestamp = useMemo(() => {

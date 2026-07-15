@@ -8,7 +8,28 @@ export async function fetchStationsFromApi(
   token: string,
   signal?: AbortSignal
 ): Promise<RealtimeStation[] | null> {
-  const response = await fetch(`${BASE_URL}/stations`, {
+  return requestStations(`${BASE_URL}/stations`, token, signal);
+}
+
+/**
+ * État de toutes les stations à un instant donné (slider temporel).
+ * `at` doit être un instant absolu (ISO 8601, ex. Date.toISOString()).
+ */
+export async function fetchStationsSnapshotFromApi(
+  token: string,
+  at: string,
+  signal?: AbortSignal
+): Promise<RealtimeStation[] | null> {
+  const url = `${BASE_URL}/stations/snapshot?at=${encodeURIComponent(at)}`;
+  return requestStations(url, token, signal);
+}
+
+async function requestStations(
+  url: string,
+  token: string,
+  signal?: AbortSignal
+): Promise<RealtimeStation[] | null> {
+  const response = await fetch(url, {
     method: "GET",
     signal,
     cache: "no-store",
