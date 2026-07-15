@@ -6,6 +6,7 @@ import { CalendarDays, Pause, Play } from "lucide-react";
 type BottomTimeBarProps = {
   minuteOfDay: number;
   liveTimeLabel: string;
+  isLive: boolean;
   isPlaying: boolean;
   playbackSpeed: number;
   onTogglePlay: () => void;
@@ -17,6 +18,7 @@ type BottomTimeBarProps = {
 export function BottomTimeBar({
   minuteOfDay,
   liveTimeLabel,
+  isLive,
   isPlaying,
   playbackSpeed,
   onTogglePlay,
@@ -74,7 +76,7 @@ export function BottomTimeBar({
             className="absolute -top-3 -translate-x-1/2 whitespace-nowrap rounded-full bg-[#A61D24] px-2 py-0.5 text-[10px] font-bold text-white"
             style={{ left: `${(minuteOfDay / 1439) * 100}%` }}
           >
-            EN DIRECT : {liveTimeLabel}
+            {isLive ? "EN DIRECT" : "REPLAY"} : {liveTimeLabel}
           </div>
         </div>
 
