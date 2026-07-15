@@ -24,6 +24,69 @@ export async function fetchStationsSnapshotFromApi(
   return requestStations(url, token, signal);
 }
 
+export type TimelineStation = {
+  stationId: string;
+  name: string;
+  lat: number;
+  lng: number;
+  capacity: number;
+  /** timestamps UTC en ms epoch, triés croissant */
+  t: number[];
+  /** vélos disponibles, alignés sur `t` */
+  bikes: number[];
+};
+
+export type DayTimeline = {
+  date: string;
+  stations: TimelineStation[];
+};
+
+/**
+ * Toute la timeline du jour en un seul appel : le slider/playback calcule
+ * ensuite l'état des stations en local (aucun appel réseau par position).
+ */
+export async function fetchDayTimelineFromApi(
+  token: string,
+  signal?: AbortSignal
+): Promise<DayTimeline | null> {
+  const response = await fetch(`${BASE_URL}/stations/day-timeline`, {
+    method: "GET",
+    signal,
+    cache: "no-store",
+    headers: { Accept: "application/json", Authorization: `Bearer ${token}` },
+  });
+  if (!response.ok) {
+    throw new Error(`Timeline API error: ${response.status}`);
+  }
+  const payload = (await response.json()) as unknown;
+  if (!isRecord(payload) || !Array.isArray(payload.stations)) {
+    return null;
+  }
+  const stations: TimelineStation[] = [];
+  for (const raw of payload.stations) {
+    if (!isRecord(raw)) continue;
+    const stationId = toStringValue(raw.station_id) ?? toStringValue(raw.stationId);
+    const t = Array.isArray(raw.t) ? (raw.t as unknown[]).map(Number) : [];
+    const bikes = Array.isArray(raw.bikes) ? (raw.bikes as unknown[]).map(Number) : [];
+    const lat = toNumberValue(raw.lat);
+    const lng = toNumberValue(raw.lon) ?? toNumberValue(raw.lng);
+    const capacity = toNumberValue(raw.capacity) ?? 0;
+    if (!stationId || lat === undefined || lng === undefined || t.length === 0) {
+      continue;
+    }
+    stations.push({
+      stationId,
+      name: toStringValue(raw.name) ?? "Station",
+      lat,
+      lng,
+      capacity,
+      t,
+      bikes,
+    });
+  }
+  return { date: toStringValue(payload.date) ?? "", stations };
+}
+
 async function requestStations(
   url: string,
   token: string,
