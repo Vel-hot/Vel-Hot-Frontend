@@ -40,6 +40,12 @@ export function LiveMap() {
   const [showInfoCard, setShowInfoCard] = useState(false);
   const [userPosition, setUserPosition] = useState<[number, number] | null>(null);
   const [zoom, setZoom] = useState(13);
+  const [isDaltonien, setIsDaltonien] = useState(false);
+
+  useEffect(() => {
+    const saved = localStorage.getItem("velhot.settings.daltonien");
+    setIsDaltonien(saved === "true");
+  }, []);
 
   const timeBarBottom = 24;
   const timeBarHeight = 96;
@@ -156,8 +162,8 @@ export function LiveMap() {
               center={[station.lat, station.lng]}
               radius={Math.max(9, station.bikesPct / 4)}
               pathOptions={{
-                color: stationColor(station.bikesPct),
-                fillColor: stationColor(station.bikesPct),
+                color: stationColor(station.bikesPct, isDaltonien),
+                fillColor: stationColor(station.bikesPct, isDaltonien),
                 fillOpacity: 0.72,
                 weight: 1,
               }}
@@ -238,7 +244,17 @@ export function LiveMap() {
   );
 }
 
-function stationColor(availabilityPct: number) {
+function stationColor(availabilityPct: number, isDaltonien: boolean) {
+  if (isDaltonien) {
+    if (availabilityPct < 20) {
+      return "#d55e00"; // Vermillon/Orange-Rouge distinct (vide)
+    }
+    if (availabilityPct < 50) {
+      return "#f0e442"; // Jaune (moyen)
+    }
+    return "#0072b2"; // Bleu ciel foncé (bonne dispo)
+  }
+
   if (availabilityPct < 20) {
     return "#ef4444"; // Rouge (vide ou presque vide : alerte)
   }

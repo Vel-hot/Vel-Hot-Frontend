@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Save } from "lucide-react";
 import { ProfileCard } from "@/components/settings/ProfileCard";
 import { AccessibilityCard } from "@/components/settings/AccessibilityCard";
@@ -14,10 +14,23 @@ export default function SettingsPage() {
     system: true,
   });
 
-  const [daltonien, setDaltonien] = useState(true);
+  const [daltonien, setDaltonien] = useState(false);
+
+  useEffect(() => {
+    const saved = localStorage.getItem("velhot.settings.daltonien");
+    if (saved !== null) {
+      setDaltonien(saved === "true");
+    }
+  }, []);
 
   const handleNotificationToggle = (type: "push" | "email" | "system") => {
     setNotifications((prev) => ({ ...prev, [type]: !prev[type] }));
+  };
+
+  const handleSave = () => {
+    localStorage.setItem("velhot.settings.daltonien", String(daltonien));
+    window.dispatchEvent(new Event("settings-updated"));
+    alert("Paramètres sauvegardés avec succès !");
   };
 
   return (
@@ -48,7 +61,10 @@ export default function SettingsPage() {
         {/* Footer Actions */}
         <footer className="mt-12 flex items-center justify-end gap-6">
           <button className="text-sm font-bold text-zinc-500 hover:text-zinc-300">Annuler</button>
-          <button className="flex items-center gap-2 rounded-xl bg-[#A61D24] px-8 py-4 text-sm font-bold text-white shadow-lg shadow-red-900/20 transition-transform hover:scale-105 active:scale-95">
+          <button 
+            onClick={handleSave}
+            className="flex items-center gap-2 rounded-xl bg-brand px-8 py-4 text-sm font-bold text-white shadow-lg shadow-brand/20 transition-transform hover:scale-105 active:scale-95 cursor-pointer"
+          >
             <Save size={18} />
             Sauvegarder les modifications
           </button>
@@ -57,3 +73,4 @@ export default function SettingsPage() {
     </div>
   );
 }
+

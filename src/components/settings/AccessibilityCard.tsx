@@ -25,14 +25,18 @@ export function AccessibilityCard({ active, onToggle }: AccessibilityCardProps) 
       </p>
 
       <div className="mt-6 overflow-hidden rounded-xl border border-white/40 shadow-inner">
-        <div className="relative h-40 w-full bg-gradient-to-br from-purple-600 via-pink-500 to-orange-400">
+        <div className={`relative h-40 w-full bg-gradient-to-br transition-all duration-300 ${
+          active 
+            ? "from-[#0072b2] via-[#f0e442] to-[#d55e00]" 
+            : "from-purple-600 via-pink-500 to-[#A61D24]"
+        }`}>
           <div className="absolute inset-0 grid grid-cols-12 grid-rows-6 opacity-20">
             {Array.from({ length: 72 }).map((_, i) => (
               <div key={i} className="border-[0.5px] border-white" />
             ))}
           </div>
           <div className="absolute bottom-4 left-4 text-[10px] font-black uppercase tracking-widest text-white drop-shadow-md">
-            Preview: High Contrast Grid
+            Preview: {active ? "Colorblind Mode Palette" : "Standard Palette Grid"}
           </div>
         </div>
       </div>

@@ -40,11 +40,11 @@ export function Sidebar() {
         }`}
       >
         <div className={collapsed ? "flex items-center" : "flex items-center gap-3"}>
-          <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-[#A61D24] text-xs font-bold uppercase tracking-wide text-white">
+          <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-brand text-xs font-bold uppercase tracking-wide text-white">
             VH
           </div>
           <h1
-            className={`text-[28px] font-black tracking-tight text-[#A61D24] transition-all duration-300 ${
+            className={`text-[28px] font-black tracking-tight text-brand transition-all duration-300 ${
               collapsed ? "w-0 opacity-0 overflow-hidden" : "w-auto opacity-100"
             }`}
           >
@@ -68,7 +68,7 @@ export function Sidebar() {
           collapsed ? "h-0 overflow-hidden px-0 py-0 opacity-0" : "px-8 py-6 opacity-100"
         }`}
       >
-        <p className="text-xs font-bold tracking-[0.18em] text-[#A61D24]">LYON NETWORK</p>
+        <p className="text-xs font-bold tracking-[0.18em] text-brand">LYON NETWORK</p>
         <p className="mt-1 text-[10px] uppercase tracking-[0.22em] text-zinc-500">Predictive Cartesian</p>
       </div>
 
@@ -87,7 +87,7 @@ export function Sidebar() {
         {isAuthenticated && user ? (
           <div className={collapsed ? "flex flex-col items-center gap-3" : "space-y-3"}>
             <div className={`rounded-2xl border border-zinc-200 bg-white px-4 py-3 ${collapsed ? "text-center" : ""}`}>
-              <p className="text-[10px] font-bold tracking-[0.16em] text-[#A61D24]">CONNECTÉ</p>
+              <p className="text-[10px] font-bold tracking-[0.16em] text-brand">CONNECTÉ</p>
               <p className={`mt-1 text-sm font-semibold text-zinc-800 ${collapsed ? "sr-only" : ""}`}>
                 {user.prenom} {user.nom}
               </p>
@@ -109,7 +109,7 @@ export function Sidebar() {
             </Link>
             <Link
               href="/register"
-              className={`flex items-center rounded-xl bg-[#A61D24] px-4 py-3 text-white transition hover:opacity-95 ${
+              className={`flex items-center rounded-xl bg-brand px-4 py-3 text-white transition hover:opacity-95 ${
                 collapsed ? "justify-center px-0" : "gap-2"
               }`}
               aria-label="Inscription"
@@ -136,7 +136,7 @@ type SidebarNavLinkProps = {
 function SidebarNavLink({ href, icon: Icon, label, active, collapsed }: SidebarNavLinkProps) {
   const base =
     "flex w-full items-center rounded-xl px-4 py-3 text-sm font-semibold transition";
-  const activeStyles = "border-l-[3px] border-[#A61D24] bg-white text-[#A61D24]";
+  const activeStyles = "border-l-[3px] border-brand bg-white text-brand";
   const inactiveStyles = "text-zinc-600 hover:bg-zinc-100";
   const collapsedStyles = "justify-center px-0";
 
