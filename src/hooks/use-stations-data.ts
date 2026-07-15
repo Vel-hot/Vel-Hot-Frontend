@@ -1,29 +1,48 @@
 import { useEffect, useMemo, useState } from "react";
-import { fetchStationsSnapshotFromApi } from "@/lib/stations-api";
+import { fetchDayTimelineFromApi } from "@/lib/stations-api";
+import type { DayTimeline } from "@/lib/stations-api";
 import { buildSimulatedStations } from "@/lib/station-simulation";
-import type { ApiStatus, RealtimeStation, StationState } from "@/types/stations";
+import type { ApiStatus, StationState } from "@/types/stations";
 import { useAuth } from "@/components/auth/AuthProvider";
 
 /**
- * Convertit une minute-du-jour (0..1439, heure locale du navigateur) en
- * instant absolu ISO 8601 pour aujourd'hui. Le backend compare cet instant
- * aux timestamps UTC du silver.
+ * Instant absolu (ms epoch UTC) correspondant à la minute-du-jour sélectionnée
+ * (heure locale du navigateur, aujourd'hui). Les timestamps de la timeline sont
+ * en UTC : on compare des instants absolus.
  */
-function minuteToTodayIso(minuteOfDay: number): string {
+function minuteToTodayMs(minuteOfDay: number): number {
   const d = new Date();
   d.setHours(0, 0, 0, 0);
   d.setMinutes(minuteOfDay);
-  return d.toISOString();
+  return d.getTime();
+}
+
+/** Index du dernier `t[i] <= target` (recherche binaire), -1 si aucun. */
+function lastIndexAtOrBefore(sortedT: number[], target: number): number {
+  let lo = 0;
+  let hi = sortedT.length - 1;
+  let res = -1;
+  while (lo <= hi) {
+    const mid = (lo + hi) >> 1;
+    if (sortedT[mid] <= target) {
+      res = mid;
+      lo = mid + 1;
+    } else {
+      hi = mid - 1;
+    }
+  }
+  return res;
 }
 
 export function useStationsData(minuteOfDay: number) {
-  const [apiStations, setApiStations] = useState<StationState[] | null>(null);
+  const [timeline, setTimeline] = useState<DayTimeline | null>(null);
   const [apiStatus, setApiStatus] = useState<ApiStatus>("idle");
   const [lastSync, setLastSync] = useState<Date | null>(null);
   const { token, isAuthenticated } = useAuth();
 
-  const atIso = useMemo(() => minuteToTodayIso(minuteOfDay), [minuteOfDay]);
-
+  // Un SEUL fetch (puis refresh 60 s pour capter les nouveaux relevés). Le
+  // scrubbing/playback ne déclenche AUCUN appel réseau : tout est calculé en
+  // local à partir de la timeline -> fin de la rafale d'appels annulés.
   useEffect(() => {
     if (!isAuthenticated || !token) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -34,50 +53,59 @@ export function useStationsData(minuteOfDay: number) {
     let cancelled = false;
     const abortController = new AbortController();
 
-    const loadStations = async () => {
+    const loadTimeline = async () => {
       try {
-        const realtimeStations = await fetchStationsSnapshotFromApi(
-          token,
-          atIso,
-          abortController.signal
-        );
-
-        if (cancelled) {
-          return;
-        }
-
-        if (realtimeStations === null) {
+        const data = await fetchDayTimelineFromApi(token, abortController.signal);
+        if (cancelled) return;
+        if (data === null) {
           setApiStatus("disabled");
           return;
         }
-
-        const normalized = realtimeStations.map(toStationState);
-        setApiStations(normalized);
+        setTimeline(data);
         setApiStatus("ok");
         setLastSync(new Date());
       } catch {
-        if (!cancelled) {
-          setApiStatus("error");
-        }
+        if (!cancelled) setApiStatus("error");
       }
     };
 
-    // Léger debounce : lisse le scrubbing et le playback (5 min / tick).
-    const debounce = window.setTimeout(loadStations, 200);
-    // Rafraîchissement live pour capter les nouveaux relevés (~5 min).
-    const refresh = window.setInterval(loadStations, 60_000);
+    loadTimeline();
+    const refresh = window.setInterval(loadTimeline, 60_000);
 
     return () => {
       cancelled = true;
       abortController.abort();
-      window.clearTimeout(debounce);
       window.clearInterval(refresh);
     };
-  }, [token, isAuthenticated, atIso]);
+  }, [token, isAuthenticated]);
+
+  // État des stations à la minute sélectionnée : calcul local (binaire).
+  const apiStations = useMemo<StationState[] | null>(() => {
+    if (!timeline) return null;
+    const target = minuteToTodayMs(minuteOfDay);
+    const out: StationState[] = [];
+    for (const s of timeline.stations) {
+      const i = lastIndexAtOrBefore(s.t, target);
+      if (i < 0) continue; // instant antérieur au 1er relevé -> station masquée
+      const bikes = clamp(Math.round(s.bikes[i] ?? 0), 0, s.capacity);
+      const bikesPct = Math.round((bikes / Math.max(1, s.capacity)) * 100);
+      out.push({
+        id: s.stationId,
+        name: s.name,
+        lat: s.lat,
+        lng: s.lng,
+        capacity: s.capacity,
+        bikes,
+        docks: Math.max(0, s.capacity - bikes),
+        bikesPct,
+        timestamp: new Date(s.t[i]).toISOString(),
+      });
+    }
+    return out;
+  }, [timeline, minuteOfDay]);
 
   const simulatedStations = useMemo(() => buildSimulatedStations(minuteOfDay), [minuteOfDay]);
-  // Non authentifié : simulation. Authentifié : données réelles (même si le
-  // snapshot est vide pour l'instant sélectionné — on n'invente rien).
+  // Non authentifié : simulation. Authentifié : données réelles.
   const stationStates = apiStations ?? simulatedStations;
 
   const apiTimestamp = useMemo(() => {
@@ -90,24 +118,6 @@ export function useStationsData(minuteOfDay: number) {
     apiStatus,
     lastSync,
     apiTimestamp,
-  };
-}
-
-function toStationState(station: RealtimeStation): StationState {
-  const bikes = clamp(Math.round(station.bikes), 0, station.capacity);
-  const docks = clamp(Math.round(station.docks), 0, station.capacity);
-  const bikesPct = Math.round((bikes / Math.max(1, station.capacity)) * 100);
-
-  return {
-    id: station.id,
-    name: station.name,
-    lat: station.lat,
-    lng: station.lng,
-    capacity: station.capacity,
-    bikes,
-    docks,
-    bikesPct,
-    timestamp: station.timestamp,
   };
 }
 
