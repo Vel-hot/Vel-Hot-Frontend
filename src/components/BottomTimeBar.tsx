@@ -44,7 +44,7 @@ export function BottomTimeBar({
     <footer className="absolute bottom-6 left-1/2 z-20 h-[96px] w-[760px] -translate-x-1/2 rounded-2xl border border-zinc-200 bg-white px-5 py-4 shadow-[0_18px_35px_-25px_rgba(0,0,0,0.65)]">
       <div className="flex items-center gap-4">
         <button className="flex items-center gap-3 rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-2 text-left">
-          <CalendarDays size={18} className="text-[#A61D24]" />
+          <CalendarDays size={18} className="text-brand" />
           <span>
             <span className="block text-[9px] font-bold uppercase tracking-[0.15em] text-zinc-500">Date analyse</span>
             <span className="block text-sm font-bold text-zinc-700">{formattedDate}</span>
@@ -52,7 +52,7 @@ export function BottomTimeBar({
         </button>
 
         <button
-          className="grid h-11 w-11 place-items-center rounded-full bg-[#A61D24] text-white shadow-sm"
+          className="grid h-11 w-11 place-items-center rounded-full bg-brand text-white shadow-sm"
           aria-label="Lecture"
           onClick={onTogglePlay}
         >
@@ -70,10 +70,10 @@ export function BottomTimeBar({
             max={1439}
             value={minuteOfDay}
             onChange={(event) => onMinuteChange(Number(event.target.value))}
-            className="h-1.5 w-full cursor-pointer appearance-none rounded-full bg-zinc-200 accent-[#A61D24]"
+            className="h-1.5 w-full cursor-pointer appearance-none rounded-full bg-zinc-200 accent-brand"
           />
           <div
-            className="absolute -top-3 -translate-x-1/2 whitespace-nowrap rounded-full bg-[#A61D24] px-2 py-0.5 text-[10px] font-bold text-white"
+            className="absolute -top-3 -translate-x-1/2 whitespace-nowrap rounded-full bg-brand px-2 py-0.5 text-[10px] font-bold text-white"
             style={{ left: `${(minuteOfDay / 1439) * 100}%` }}
           >
             {isLive ? "EN DIRECT" : "REPLAY"} : {liveTimeLabel}

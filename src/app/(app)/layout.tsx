@@ -19,16 +19,34 @@ export default function AppLayout({
     }
   }, [isAuthenticated, isLoading, router]);
 
+  useEffect(() => {
+    const updateTheme = () => {
+      const saved = localStorage.getItem("velhot.settings.daltonien");
+      if (saved === "true") {
+        document.documentElement.classList.add("daltonien");
+      } else {
+        document.documentElement.classList.remove("daltonien");
+      }
+    };
+    
+    updateTheme();
+    
+    window.addEventListener("settings-updated", updateTheme);
+    return () => {
+      window.removeEventListener("settings-updated", updateTheme);
+    };
+  }, []);
+
   if (isLoading) {
     return (
       <div className="flex h-screen w-screen flex-col items-center justify-center bg-[#d8dae0] gap-4">
         <div className="relative flex items-center justify-center">
-          <div className="h-16 w-16 animate-spin rounded-full border-4 border-zinc-200 border-t-[#A61D24]"></div>
-          <div className="absolute grid h-10 w-10 place-items-center rounded-full bg-[#A61D24] text-[10px] font-bold uppercase tracking-wide text-white animate-pulse">
+          <div className="h-16 w-16 animate-spin rounded-full border-4 border-zinc-200 border-t-brand"></div>
+          <div className="absolute grid h-10 w-10 place-items-center rounded-full bg-brand text-[10px] font-bold uppercase tracking-wide text-white animate-pulse">
             VH
           </div>
         </div>
-        <p className="text-xs font-bold tracking-widest text-[#A61D24] uppercase animate-pulse">
+        <p className="text-xs font-bold tracking-widest text-brand uppercase animate-pulse">
           Chargement de la session...
         </p>
       </div>

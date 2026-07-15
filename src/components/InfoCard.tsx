@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { TrendingUp } from "lucide-react";
 
 type InfoCardProps = {
@@ -15,6 +16,13 @@ export function InfoCard({
   stationCount,
   bottomOffsetPx = 136,
 }: InfoCardProps) {
+  const [isDaltonien, setIsDaltonien] = useState(false);
+
+  useEffect(() => {
+    const saved = localStorage.getItem("velhot.settings.daltonien");
+    setIsDaltonien(saved === "true");
+  }, []);
+
   return (
     <article
       className="absolute right-6 z-20 w-[345px] rounded-2xl border border-zinc-200 bg-white p-5 shadow-[0_18px_35px_-25px_rgba(0,0,0,0.65)]"
@@ -41,7 +49,11 @@ export function InfoCard({
           <p className="text-[10px] font-bold tracking-[0.14em] text-zinc-400">
             LÉGENDE THERMIQUE
           </p>
-          <div className="mt-3 h-2 rounded-full bg-gradient-to-r from-[#2ea44f] via-[#f59e0b] to-[#ef4444]" />
+          <div className={`mt-3 h-2 rounded-full bg-gradient-to-r ${
+            isDaltonien 
+              ? "from-[#0072b2] via-[#f0e442] to-[#d55e00]" 
+              : "from-[#2ea44f] via-[#f59e0b] to-[#ef4444]"
+          }`} />
           <div className="mt-2 flex items-center justify-between text-[9px] font-bold tracking-wide text-zinc-500">
             <span>BASSE</span>
             <span>MOYENNE</span>
