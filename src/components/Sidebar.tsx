@@ -13,7 +13,6 @@ import {
   Map,
   Settings,
   TrendingUp,
-  Activity,
 } from "lucide-react";
 
 import { useAuth } from "@/components/auth/AuthProvider";
@@ -76,9 +75,9 @@ export function Sidebar() {
       <nav className={`space-y-2 transition-all duration-300 ${collapsed ? "px-2 pt-4" : "px-4"}`}>
         <SidebarNavLink href="/" icon={Map} label="LIVE MAP" active={pathname === "/"} collapsed={collapsed} />
         <SidebarNavLink href="/history" icon={TrendingUp} label="DATA HISTORIQUE" active={pathname === "/history"} collapsed={collapsed} />
-        <SidebarNavLink href="/flows" icon={Activity} label="ANALYSE DE FLUX" active={pathname === "/flows"} collapsed={collapsed} />
         <SidebarNavLink href="/settings" icon={Settings} label="SETTINGS" active={pathname === "/settings"} collapsed={collapsed} />
       </nav>
+
 
       <div
         className={`mt-auto space-y-4 pb-8 text-xs font-semibold text-zinc-500 transition-all duration-300 ${
